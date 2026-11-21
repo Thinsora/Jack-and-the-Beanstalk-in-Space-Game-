@@ -9,17 +9,17 @@
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#020511}
 a-scene{width:100%;height:100%}
 .a-enter-vr{bottom:15px}
-#ammo-hud{position:fixed;top:18px;left:18px;z-index:10000;display:none;min-width:205px;padding:12px 15px;border:1px solid rgba(110,225,255,.75);border-radius:10px;background:rgba(2,12,30,.82);box-shadow:0 0 18px rgba(0,210,255,.22);color:#dffaff;font:600 14px/1.35 Arial,sans-serif;letter-spacing:.08em;pointer-events:none}
-#ammo-hud-title{font-size:12px;color:#7deaff;letter-spacing:.16em;margin-bottom:7px}
-#ammo-hud-count{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px}
-#ammo-hud-indicators{display:flex;gap:7px}
-.ammo-dot{width:22px;height:7px;border-radius:5px;background:#36dcff;box-shadow:0 0 8px #00cfff}
-.ammo-dot.spent{background:#344456;box-shadow:none;opacity:.55}
-#game-over-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;background:rgba(0,0,0,.88);color:#fff;font-family:Arial,sans-serif;text-align:center;pointer-events:auto}
-#game-over-overlay h1{margin:0;color:#ff3b4f;font-size:clamp(42px,8vw,82px);letter-spacing:.12em;text-shadow:0 0 22px rgba(255,30,65,.75)}
-#game-over-overlay p{margin:0 20px 8px;font-size:clamp(15px,2.5vw,22px);color:#d8e6f5;letter-spacing:.08em}
-#retry-button{border:1px solid #8beeff;border-radius:8px;padding:13px 32px;background:#073b56;color:#e8fcff;font-size:17px;font-weight:800;letter-spacing:.14em;cursor:pointer;box-shadow:0 0 18px rgba(0,210,255,.35)}
-#retry-button:hover{background:#0a6386}
+/* Mobile hold-to-move controls */
+#mobile-movement{display:none;position:fixed;left:18px;bottom:22px;z-index:1000;
+  width:164px;height:164px;touch-action:none;user-select:none;-webkit-user-select:none}
+#mobile-movement button{position:absolute;width:54px;height:54px;border:1px solid rgba(130,225,255,.85);
+  border-radius:14px;background:rgba(5,25,55,.72);color:#e9fbff;font-size:25px;font-weight:700;
+  box-shadow:0 0 12px rgba(0,190,255,.25);touch-action:none;-webkit-tap-highlight-color:transparent}
+#mobile-movement button:active,#mobile-movement button.pressed{background:rgba(0,170,255,.82);transform:scale(.94)}
+#move-forward{left:55px;top:0} #move-left{left:0;top:55px}
+#move-back{left:55px;top:110px} #move-right{left:110px;top:55px}
+@media (hover:none) and (pointer:coarse){#mobile-movement{display:block}}
+@media (max-width:600px){#mobile-movement{transform:scale(.9);transform-origin:bottom left;left:12px;bottom:14px}}
 </style>
 </head>
 <body>
@@ -91,8 +91,8 @@ a-scene{width:100%;height:100%}
 </a-entity>
 <a-text value="JACK" position="1.1 2.9 -2.4" align="center" color="#FFFFFF" width="3"></a-text>
 
-<!-- PULSE BLASTER PICKUP: hidden behind the tower; circle around the tower to discover it -->
-<a-entity id="pulse-blaster-pickup" position="0.22 0.42 -6.65" rotation="0 0 -18" animation="property:position;from:0.22 0.42 -6.65;to:0.22 0.68 -6.65;dur:1100;dir:alternate;loop:true;easing:easeInOutSine">
+<!-- PULSE BLASTER PICKUP: collect this item before challenging the Guardian -->
+<a-entity id="pulse-blaster-pickup" position="-2.15 0.42 -4.05" rotation="0 0 -18" animation="property:position;from:-2.15 0.42 -4.05;to:-2.15 0.68 -4.05;dur:1100;dir:alternate;loop:true;easing:easeInOutSine">
   <a-box class="clickable" position="0 0.12 0" width="0.42" height="0.22" depth="0.78" color="#52647F" material="metalness:0.7;roughness:0.25"></a-box>
   <a-cylinder class="clickable" position="0 0.18 -0.48" rotation="90 0 0" radius="0.12" height="0.62" color="#8CEBFF" material="emissive:#00CFFF;emissiveIntensity:2.2"></a-cylinder>
   <a-box position="0 -0.18 0.12" rotation="-18 0 0" width="0.22" height="0.42" depth="0.25" color="#28364D"></a-box>
@@ -358,10 +358,6 @@ a-scene{width:100%;height:100%}
   <a-box id="guardian-leg-l" position="-0.8 27.05 -5" width="0.6" height="1.4" depth="0.7" color="#B3B9C8"></a-box>
   <a-box id="guardian-leg-r" position="0.8 27.05 -5" width="0.6" height="1.4" depth="0.7" color="#B3B9C8"></a-box>
   <a-box class="clickable" position="0 28.6 -5" width="2.6" height="2" depth="1.2" color="#D1D7E4"></a-box>
-  <!-- Three chest status lights: cyan while active, dark after each hit, red while stunned -->
-  <a-box id="guardian-chest-light-1" position="-0.48 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
-  <a-box id="guardian-chest-light-2" position="0 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
-  <a-box id="guardian-chest-light-3" position="0.48 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
   <a-sphere id="guardian-core" class="clickable" position="0 28.6 -4.35" radius="0.35" color="#00DFFF" material="emissive:#00DFFF;emissiveIntensity:2"></a-sphere>
   <a-box class="clickable" position="0 30.05 -5" width="1.5" height="1.1" depth="1.1" color="#E0E4EC"></a-box>
   <a-box id="guardian-eye-l" position="-0.4 30.1 -4.42" width="0.25" height="0.2" depth="0.08" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
@@ -413,18 +409,12 @@ a-scene{width:100%;height:100%}
 
 </a-scene>
 
-<!-- Ammo HUD appears only after collecting the Pulse Blaster. -->
-<div id="ammo-hud" aria-live="polite">
-  <div id="ammo-hud-title">PULSE BLASTER</div>
-  <div id="ammo-hud-count">AMMO: 5 / 5</div>
-  <div id="ammo-hud-indicators">
-    <span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span>
-  </div>
-</div>
-<div id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
-  <h1 id="game-over-title">GAME OVER</h1>
-  <p>ALL PULSE BLASTER AMMO HAS BEEN USED.</p>
-  <button id="retry-button" type="button">RETRY</button>
+<!-- Touch D-pad: keep a direction pressed to move continuously -->
+<div id="mobile-movement" aria-label="Movement controls">
+  <button id="move-forward" type="button" aria-label="Move forward">▲</button>
+  <button id="move-left" type="button" aria-label="Move left">◀</button>
+  <button id="move-back" type="button" aria-label="Move backward">▼</button>
+  <button id="move-right" type="button" aria-label="Move right">▶</button>
 </div>
 
 <script>
@@ -466,19 +456,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function playLockedBuzz() {
     playTone(140, 0.22, "sawtooth", 0.06, 95);
-  }
-
-  // A crisp electronic laser burst whenever the player fires (hit or miss).
-  function playBlasterFireSound() {
-    playTone(980, 0.075, "sawtooth", 0.065, 260);
-    setTimeout(() => playTone(420, 0.11, "square", 0.045, 120), 28);
-  }
-
-  // A layered impact / shield-hit sound whenever the Guardian damages the player.
-  function playDamageSound() {
-    playTone(155, 0.24, "sawtooth", 0.12, 38);
-    setTimeout(() => playTone(68, 0.28, "triangle", 0.10, 26), 35);
-    setTimeout(() => playTone(510, 0.07, "square", 0.045, 90), 8);
   }
 
   function playElevatorSound(goingUp, durationMs) {
@@ -686,38 +663,78 @@ document.addEventListener("DOMContentLoaded", function () {
     const guardianEyeR = document.querySelector("#guardian-eye-r");
     const cityLight = document.querySelector("#city-light");
     const pulseBlasterPickup = document.querySelector("#pulse-blaster-pickup");
-    const ammoHud = document.querySelector("#ammo-hud");
-    const ammoHudCount = document.querySelector("#ammo-hud-count");
-    const ammoDots = Array.from(document.querySelectorAll(".ammo-dot"));
-    const gameOverOverlay = document.querySelector("#game-over-overlay");
-    const retryButton = document.querySelector("#retry-button");
-    const guardianChestLights = [
-      document.querySelector("#guardian-chest-light-1"),
-      document.querySelector("#guardian-chest-light-2"),
-      document.querySelector("#guardian-chest-light-3")
-    ];
-    const mouseCursor = document.querySelector("#mouse-cursor");
 
     let isTravelling = false;
     let hasCollectedCore = false;
     let missionComplete = false;
     let isOverview = false;
     let hasPulseBlaster = false;
-    let ammoRemaining = 5;
-    let isGameOver = false;
-    let lastHandledInteractionAt = 0;
     let guardianHits = 0;
     let guardianStunned = false;
-    let guardianStunPending = false;
     let guardianStunTimer = null;
-    let guardianStunDelayTimer = null;
-    let guardianBlinkInterval = null;
-    let guardianRetaliationInterval = null;
     const HITS_TO_STUN = 3;
     const STUN_DURATION = 9000;
     let savedPos = { x: 0, y: 0, z: 7 };
     let defaultMessage = "FIND THE PULSE BLASTER NEAR THE TOWER";
     let altitudeRaf = null;
+
+    // Mobile D-pad movement. A direction stays active while its button is held.
+    const mobileMoveButtons = {
+      forward: document.querySelector("#move-forward"),
+      back: document.querySelector("#move-back"),
+      left: document.querySelector("#move-left"),
+      right: document.querySelector("#move-right")
+    };
+    const activeMoveDirections = new Set();
+    const movementCamera = document.querySelector("#main-camera");
+    const mobileMoveSpeed = 7;
+    let previousMoveFrame = 0;
+
+    Object.entries(mobileMoveButtons).forEach(([direction, button]) => {
+      if (!button) return;
+      const startMove = (event) => {
+        event.preventDefault();
+        if (isTravelling || missionComplete) return;
+        activeMoveDirections.add(direction);
+        button.classList.add("pressed");
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+      };
+      const stopMove = (event) => {
+        if (event) event.preventDefault();
+        activeMoveDirections.delete(direction);
+        button.classList.remove("pressed");
+      };
+      button.addEventListener("pointerdown", startMove, { passive: false });
+      button.addEventListener("pointerup", stopMove, { passive: false });
+      button.addEventListener("pointercancel", stopMove, { passive: false });
+      button.addEventListener("lostpointercapture", stopMove);
+      button.addEventListener("contextmenu", event => event.preventDefault());
+    });
+
+    function updateMobileMovement(timestamp) {
+      const delta = previousMoveFrame ? Math.min((timestamp - previousMoveFrame) / 1000, 0.05) : 0;
+      previousMoveFrame = timestamp;
+      if (activeMoveDirections.size && !isTravelling && !missionComplete && !isOverview) {
+        // Camera facing direction projected onto the horizontal plane.
+        const forward = new THREE.Vector3();
+        movementCamera.object3D.getWorldDirection(forward);
+        forward.y = 0;
+        if (forward.lengthSq() > 0) forward.normalize();
+        const right = new THREE.Vector3(-forward.z, 0, forward.x).normalize();
+        const movement = new THREE.Vector3();
+        if (activeMoveDirections.has("forward")) movement.add(forward);
+        if (activeMoveDirections.has("back")) movement.sub(forward);
+        if (activeMoveDirections.has("right")) movement.add(right);
+        if (activeMoveDirections.has("left")) movement.sub(right);
+        if (movement.lengthSq() > 0) {
+          movement.normalize().multiplyScalar(mobileMoveSpeed * delta);
+          cameraRig.object3D.position.add(movement);
+          cameraRig.object3D.updateMatrixWorld(true);
+        }
+      }
+      requestAnimationFrame(updateMobileMovement);
+    }
+    requestAnimationFrame(updateMobileMovement);
 
     // The Guardian runs around the cloud city in an evasive, zig-zagging route.
     // The Golden Core remains attached to its hand because it is nested inside it.
@@ -739,7 +756,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function animateGuardianPatrol(timestamp) {
-      if (guardianStunned || guardianStunPending || isGameOver) {
+      if (guardianStunned) {
         requestAnimationFrame(animateGuardianPatrol);
         return;
       }
@@ -756,107 +773,6 @@ document.addEventListener("DOMContentLoaded", function () {
       requestAnimationFrame(animateGuardianPatrol);
     }
     requestAnimationFrame(animateGuardianPatrol);
-    installEmptyClickAmmoHandler();
-    startGuardianRetaliation();
-
-    function markHandledInteraction() {
-      lastHandledInteractionAt = Date.now();
-    }
-
-    function setChestLights(mode, litCount = 3) {
-      guardianChestLights.forEach((light, index) => {
-        if (!light) return;
-        if (mode === "off" || (mode === "progress" && index < litCount)) {
-          light.setAttribute("color", "#17212D");
-          light.setAttribute("material", "emissive:#000000;emissiveIntensity:0");
-        } else if (mode === "red") {
-          light.setAttribute("color", "#FF263D");
-          light.setAttribute("material", "emissive:#FF001E;emissiveIntensity:4");
-        } else {
-          light.setAttribute("color", "#00EFFF");
-          light.setAttribute("material", "emissive:#00DFFF;emissiveIntensity:3");
-        }
-      });
-    }
-
-    function updateAmmoHud() {
-      if (!hasPulseBlaster) return;
-      ammoHud.style.display = "block";
-      ammoHudCount.textContent = `AMMO: ${ammoRemaining} / 5`;
-      ammoDots.forEach((dot, index) => dot.classList.toggle("spent", index >= ammoRemaining));
-    }
-
-    function triggerGameOver() {
-      if (isGameOver) return;
-      isGameOver = true;
-      stopAlarmSound();
-      if (guardianStunTimer) clearTimeout(guardianStunTimer);
-      if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
-      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
-      if (guardianRetaliationInterval) clearInterval(guardianRetaliationInterval);
-      gameOverOverlay.style.display = "flex";
-      // Disable all world interactions while leaving the HTML RETRY button usable.
-      document.querySelectorAll(".clickable").forEach((el) => el.classList.remove("clickable"));
-      if (scene.canvas) scene.canvas.style.pointerEvents = "none";
-      const gazeRaycaster = document.querySelector("#gaze-cursor");
-      if (gazeRaycaster) gazeRaycaster.setAttribute("raycaster", "enabled", false);
-      if (mouseCursor) mouseCursor.setAttribute("raycaster", "enabled", false);
-    }
-
-    function consumeAmmo(reason) {
-      if (!hasPulseBlaster || isGameOver || ammoRemaining <= 0) return false;
-      ammoRemaining = Math.max(0, ammoRemaining - 1);
-      updateAmmoHud();
-      // A shot is audible for both a successful Guardian hit and an empty-space miss.
-      if (reason === "hit" || reason === "miss") playBlasterFireSound();
-      if (reason === "miss") {
-        showMessage("SHOT MISSED — AMMO -1", false, "#FFCC77");
-      } else if (reason === "retaliation") {
-        playDamageSound();
-        showMessage("GUARDIAN COUNTERATTACK — AMMO -1", false, "#FF7777");
-      }
-      if (ammoRemaining === 0) {
-        triggerGameOver();
-        return false;
-      }
-      return true;
-    }
-
-    function isPlayerInCloudCity() {
-      const p = cameraRig.object3D.position;
-      const dx = p.x;
-      const dz = p.z + 5;
-      return p.y >= 22 && p.y <= 36 && Math.sqrt(dx * dx + dz * dz) <= 13;
-    }
-
-    function startGuardianRetaliation() {
-      if (guardianRetaliationInterval) clearInterval(guardianRetaliationInterval);
-      guardianRetaliationInterval = setInterval(() => {
-        if (isGameOver || !hasPulseBlaster || hasCollectedCore || guardianStunned || guardianStunPending || isTravelling) return;
-        if (!isPlayerInCloudCity()) return;
-        consumeAmmo("retaliation");
-      }, 7000);
-    }
-
-    // Empty-space/background clicks consume one shot. Clicks on existing game objects
-    // are exempt; Guardian clicks are charged by the Guardian handler itself.
-    function installEmptyClickAmmoHandler() {
-      const canvas = scene.canvas;
-      if (!canvas) return;
-      canvas.addEventListener("click", () => {
-        if (!hasPulseBlaster || isGameOver) return;
-        setTimeout(() => {
-          if (isGameOver || Date.now() - lastHandledInteractionAt < 140) return;
-          const raycaster = mouseCursor && mouseCursor.components && mouseCursor.components.raycaster;
-          const intersections = raycaster && raycaster.intersectedEls ? raycaster.intersectedEls : [];
-          const hitExistingClickable = intersections.some((el) => el && el.classList && el.classList.contains("clickable"));
-          if (hitExistingClickable) return;
-          consumeAmmo("miss");
-        }, 0);
-      });
-    }
-
-    retryButton.addEventListener("click", () => window.location.reload());
 
     function showMessage(message, setAsDefault = false, color = "#FFFFFF") {
       if (setAsDefault) defaultMessage = message;
@@ -899,8 +815,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     ascendPad.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver) return;
       travelTo(0, 26.3, -0.2, 8000, "ASCENDING", () => {
         if (hasCollectedCore && !missionComplete) {
           showMessage("ALERT! ESCAPE TO THE RETURN PAD!", true, "#FF6B6B");
@@ -911,8 +825,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     returnPad.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver || isTravelling) return;
+      if (isTravelling) return;
       if (!hasCollectedCore) {
         playLockedBuzz();
         showMessage("RETURN PORTAL LOCKED — COLLECT THE GOLDEN CORE FIRST!", false, "#FF6B6B");
@@ -972,19 +885,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function stunGuardian() {
-      guardianStunPending = false;
       guardianStunned = true;
-      setChestLights("red");
-      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
-      let redVisible = true;
-      guardianBlinkInterval = setInterval(() => {
-        if (!guardianStunned || isGameOver) return;
-        redVisible = !redVisible;
-        guardianChestLights.forEach((light) => {
-          if (!light) return;
-          light.setAttribute("visible", redVisible);
-        });
-      }, 300);
       guardian.removeAttribute("animation");
       setGuardianRunAnimation(false);
       guardianEyeL.setAttribute("color", "#FFFFFF");
@@ -1002,10 +903,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (hasCollectedCore) return;
         guardianStunned = false;
         guardianHits = 0;
-        if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
-        guardianBlinkInterval = null;
-        guardianChestLights.forEach((light) => light && light.setAttribute("visible", "true"));
-        setChestLights("blue");
         goldenCore.classList.remove("clickable");
         guardian.removeAttribute("animation__stun");
         guardian.object3D.rotation.set(0, 0, 0);
@@ -1022,10 +919,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     pulseBlasterPickup.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver || hasPulseBlaster) return;
+      if (hasPulseBlaster) return;
       hasPulseBlaster = true;
-      updateAmmoHud();
       playCoreFanfare();
       pulseBlasterPickup.classList.remove("clickable");
       pulseBlasterPickup.setAttribute("animation__pickup", {
@@ -1036,19 +931,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     guardian.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver || hasCollectedCore || missionComplete) return;
+      if (hasCollectedCore || missionComplete) return;
       if (!hasPulseBlaster) {
         showMessage("YOU NEED THE PULSE BLASTER NEAR THE TOWER FIRST!", false, "#FFCC77");
         return;
       }
-      if (guardianStunned || guardianStunPending) {
+      if (guardianStunned) {
         showMessage("QUICK! THE GUARDIAN IS STUNNED — TAKE THE GOLDEN CORE!", false, "#FFD700");
         return;
       }
-      if (!consumeAmmo("hit")) return;
       guardianHits = Math.min(HITS_TO_STUN, guardianHits + 1);
-      setChestLights("progress", guardianHits);
       playPulseSound();
       showPulseBeam();
       const hitFlash = document.createElement("a-sphere");
@@ -1061,37 +953,21 @@ document.addEventListener("DOMContentLoaded", function () {
       setTimeout(() => hitFlash.remove(), 320);
 
       if (guardianHits >= HITS_TO_STUN) {
-        // The third chest light goes dark immediately; red synchronized blinking
-        // and the 9-second stun begin exactly one second later.
-        guardianStunPending = true;
-        guardian.removeAttribute("animation");
-        setGuardianRunAnimation(false);
-        if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
-        guardianStunDelayTimer = setTimeout(() => {
-          if (!hasCollectedCore && !isGameOver) stunGuardian();
-        }, 1000);
-        showMessage("GUARDIAN SYSTEMS FAILING...", true, "#9CEBFF");
+        stunGuardian();
       } else {
         showMessage(`PULSE HIT ${guardianHits}/${HITS_TO_STUN} — KEEP FIRING!`, false, "#9CEBFF");
       }
     });
 
     goldenCore.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver || hasCollectedCore) return;
+      if (hasCollectedCore) return;
       if (!guardianStunned) {
         showMessage("THE GOLDEN CORE IS PROTECTED! STUN THE GUARDIAN FIRST!", false, "#FF7777");
         return;
       }
       if (guardianStunTimer) clearTimeout(guardianStunTimer);
-      if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
-      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
-      guardianBlinkInterval = null;
-      guardianStunPending = false;
       hasCollectedCore = true;
       guardianStunned = false;
-      guardianChestLights.forEach((light) => light && light.setAttribute("visible", "true"));
-      setChestLights("blue");
       if (guardianStunTimer) clearTimeout(guardianStunTimer);
       guardian.removeAttribute("animation__stun");
       guardian.object3D.rotation.set(0, 0, 0);
@@ -1134,8 +1010,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Clickable lore captions
     jack.addEventListener("click", function () {
-      markHandledInteraction();
-      if (isGameOver) return;
       playHoverChime();
       const msg = missionComplete
         ? "JACK: \"WE MADE IT BACK WITH THE GOLDEN CORE!\""
@@ -1161,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function addButtonEffects(button) {
       button.addEventListener("mouseenter", function () {
-        if (isGameOver || isTravelling) return;
+        if (isTravelling) return;
         if (button === returnPad && !hasCollectedCore) {
           showMessage("LOCKED — COLLECT THE GOLDEN CORE TO UNLOCK", false, "#FF8888");
           return;
@@ -1171,7 +1045,6 @@ document.addEventListener("DOMContentLoaded", function () {
         showMessage("CLICK TO ACTIVATE", false, "#80DFFF");
       });
       button.addEventListener("mouseleave", function () {
-        if (isGameOver) return;
         button.setAttribute("scale", "1 1 1");
         showMessage(defaultMessage, false, hasCollectedCore && !missionComplete ? "#FF6B6B" : "#FFFFFF");
       });
@@ -1179,8 +1052,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     addButtonEffects(ascendPad);
     addButtonEffects(returnPad);
-    setChestLights("blue");
-    ammoHud.style.display = "none";
     showMessage(defaultMessage, true);
   });
 });
