@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jack and the Beanstalk in Space — The Orbital Elevator</title>
+<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#020511}
+a-scene{width:100%;height:100%}
+.a-enter-vr{bottom:15px}
+#ammo-hud{position:fixed;top:18px;left:18px;z-index:10000;display:none;min-width:205px;padding:12px 15px;border:1px solid rgba(110,225,255,.75);border-radius:10px;background:rgba(2,12,30,.82);box-shadow:0 0 18px rgba(0,210,255,.22);color:#dffaff;font:600 14px/1.35 Arial,sans-serif;letter-spacing:.08em;pointer-events:none}
+#ammo-hud-title{font-size:12px;color:#7deaff;letter-spacing:.16em;margin-bottom:7px}
+#ammo-hud-count{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px}
+#ammo-hud-indicators{display:flex;gap:7px}
+.ammo-dot{width:22px;height:7px;border-radius:5px;background:#36dcff;box-shadow:0 0 8px #00cfff}
+.ammo-dot.spent{background:#344456;box-shadow:none;opacity:.55}
+#game-over-overlay{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;background:rgba(0,0,0,.88);color:#fff;font-family:Arial,sans-serif;text-align:center;pointer-events:auto}
+#game-over-overlay h1{margin:0;color:#ff3b4f;font-size:clamp(42px,8vw,82px);letter-spacing:.12em;text-shadow:0 0 22px rgba(255,30,65,.75)}
+#game-over-overlay p{margin:0 20px 8px;font-size:clamp(15px,2.5vw,22px);color:#d8e6f5;letter-spacing:.08em}
+#retry-button{border:1px solid #8beeff;border-radius:8px;padding:13px 32px;background:#073b56;color:#e8fcff;font-size:17px;font-weight:800;letter-spacing:.14em;cursor:pointer;box-shadow:0 0 18px rgba(0,210,255,.35)}
+#retry-button:hover{background:#0a6386}
+</style>
+</head>
+<body>
+
+<a-scene id="world"
+ background="color:#020511"
+ fog="type:exponential;color:#10172e;density:0.000002"
+ renderer="antialias:true;colorManagement:true">
+
+<!-- LIGHTING -->
+<a-light type="ambient" color="#FFFFFF" intensity="1.2"></a-light>
+<a-light type="directional" position="-5 15 8" color="#FFFFFF" intensity="1.5"></a-light>
+<a-light type="point" position="0 12 -5" color="#00CFFF" intensity="2.3"></a-light>
+<a-light id="city-light" type="point" position="0 28 -4" color="#FFD65A" intensity="2.3"></a-light>
+
+<!-- DEEP SPACE -->
+<a-sky color="#020511" radius="15000"></a-sky>
+<a-entity id="stars"></a-entity>
+
+<a-sphere position="-45 35 -95" radius="18" color="#30265C"
+ material="transparent:true;opacity:0.15;side:double;depthWrite:false"></a-sphere>
+<a-sphere position="55 10 -120" radius="22" color="#153C70"
+ material="transparent:true;opacity:0.13;side:double;depthWrite:false"></a-sphere>
+<a-sphere position="-65 -15 65" radius="20" color="#39244F"
+ material="transparent:true;opacity:0.1;side:double;depthWrite:false"></a-sphere>
+
+<!-- FLOATING ISLAND -->
+<a-cylinder position="0 -0.5 -5" radius="4.8" height="1.2" color="#555463"></a-cylinder>
+<a-cone position="0 -2.1 -5" radius-bottom="0.2" radius-top="4.2" height="3" color="#38394B"></a-cone>
+<a-cylinder position="0 0.13 -5" radius="4.2" height="0.25" color="#32634D"></a-cylinder>
+<a-sphere position="3 -0.4 -5" radius="0.9" color="#77717B"></a-sphere>
+<a-sphere position="-3 -0.5 -5" radius="0.8" color="#77717B"></a-sphere>
+<a-sphere position="0 -0.6 -8.5" radius="0.8" color="#625E6D"></a-sphere>
+<a-sphere position="0 -0.5 -2" radius="0.7" color="#625E6D"></a-sphere>
+<a-cylinder position="-2 0.8 -6" radius="0.13" height="1.3" color="#70472C"></a-cylinder>
+<a-sphere position="-2 1.65 -6" radius="0.75" color="#24764F"></a-sphere>
+<a-cylinder position="2 0.8 -7" radius="0.13" height="1.3" color="#70472C"></a-cylinder>
+<a-sphere position="2 1.65 -7" radius="0.75" color="#24764F"></a-sphere>
+<a-sphere position="-3 0.45 -4" radius="0.25" color="#72A95D"></a-sphere>
+<a-sphere position="3 0.45 -7" radius="0.25" color="#72A95D"></a-sphere>
+<a-text value="THE FLOATING ISLAND" position="-2.2 2.9 -4.8" color="#D9F5E8" width="5" align="center"></a-text>
+
+<!-- JACK (Clickable with waving arm & victory trophy slot) -->
+<a-entity id="jack" class="clickable" position="1.1 0.275 -2.4">
+  <a-box class="clickable" position="-0.18 0.35 0" width="0.23" height="0.65" depth="0.25" color="#34466B"></a-box>
+  <a-box class="clickable" position="0.18 0.35 0" width="0.23" height="0.65" depth="0.25" color="#34466B"></a-box>
+  <a-box position="-0.18 0.05 0.04" width="0.32" height="0.14" depth="0.4" color="#493323"></a-box>
+  <a-box position="0.18 0.05 0.04" width="0.32" height="0.14" depth="0.4" color="#493323"></a-box>
+  <a-box class="clickable" position="0 1 0" width="0.68" height="0.8" depth="0.36" color="#3476A5"></a-box>
+  <a-box position="-0.48 1 0" width="0.2" height="0.7" depth="0.23" rotation="0 0 -15" color="#3476A5"></a-box>
+  <!-- Waving right arm -->
+  <a-entity position="0.42 1.25 0" animation="property:rotation;from:0 0 10;to:0 0 42;dur:1400;dir:alternate;loop:true;easing:easeInOutSine">
+    <a-box position="0.06 -0.25 0" width="0.2" height="0.7" depth="0.23" color="#3476A5"></a-box>
+    <a-sphere position="0.06 -0.63 0" radius="0.13" color="#E5B58B"></a-sphere>
+  </a-entity>
+  <a-sphere position="-0.52 0.62 0" radius="0.13" color="#E5B58B"></a-sphere>
+  <a-sphere class="clickable" position="0 1.65 0" radius="0.32" color="#E5B58B"></a-sphere>
+  <a-sphere position="0 1.87 0" radius="0.29" color="#493323"></a-sphere>
+  <a-cone position="0 2.08 0" radius-bottom="0.37" radius-top="0.04" height="0.42" color="#D9A441"></a-cone>
+  <a-sphere position="-0.11 1.68 0.275" radius="0.04" color="#202020"></a-sphere>
+  <a-sphere position="0.11 1.68 0.275" radius="0.04" color="#202020"></a-sphere>
+  <a-box position="0 1 -0.24" width="0.42" height="0.5" depth="0.2" color="#8B572A"></a-box>
+  <!-- Captured Golden Core trophy (visible on Mission Complete) -->
+  <a-entity id="jack-trophy" visible="false" position="0 2.75 0"
+    animation="property:rotation;to:0 360 0;dur:4000;loop:true;easing:linear">
+    <a-sphere radius="0.28" color="#FFD700" material="emissive:#FFB700;emissiveIntensity:2.2;metalness:0.8;roughness:0.1"></a-sphere>
+    <a-torus radius="0.42" radius-tubular="0.025" rotation="60 0 0" color="#FFD700" material="emissive:#FFB700;emissiveIntensity:1.6"></a-torus>
+  </a-entity>
+</a-entity>
+<a-text value="JACK" position="1.1 2.9 -2.4" align="center" color="#FFFFFF" width="3"></a-text>
+
+<!-- PULSE BLASTER PICKUP: hidden behind the tower; circle around the tower to discover it -->
+<a-entity id="pulse-blaster-pickup" position="0.22 0.42 -6.65" rotation="0 0 -18" animation="property:position;from:0.22 0.42 -6.65;to:0.22 0.68 -6.65;dur:1100;dir:alternate;loop:true;easing:easeInOutSine">
+  <a-box class="clickable" position="0 0.12 0" width="0.42" height="0.22" depth="0.78" color="#52647F" material="metalness:0.7;roughness:0.25"></a-box>
+  <a-cylinder class="clickable" position="0 0.18 -0.48" rotation="90 0 0" radius="0.12" height="0.62" color="#8CEBFF" material="emissive:#00CFFF;emissiveIntensity:2.2"></a-cylinder>
+  <a-box position="0 -0.18 0.12" rotation="-18 0 0" width="0.22" height="0.42" depth="0.25" color="#28364D"></a-box>
+  <a-torus position="0 0.2 0" rotation="90 0 0" radius="0.34" radius-tubular="0.035" color="#00E5FF" material="emissive:#00CFFF;emissiveIntensity:2.5" animation="property:rotation;to:0 360 0;dur:2800;loop:true;easing:linear"></a-torus>
+  <a-text value="PULSE BLASTER" position="0 0.72 0" align="center" color="#9CEBFF" width="2.8"></a-text>
+</a-entity>
+
+<!-- SPACE ELEVATOR TOWER -->
+<a-cylinder position="0 13.1 -5" radius="0.48" height="26" color="#168CFF"
+ material="emissive:#087BFF;emissiveIntensity:1.2;metalness:0.7;roughness:0.2"></a-cylinder>
+<a-cylinder position="0 13.1 -5" radius="0.15" height="26" color="#B5F7FF"
+ material="emissive:#55DDFF;emissiveIntensity:2"></a-cylinder>
+<a-cylinder position="-0.65 13.1 -5" radius="0.045" height="26" color="#58BFFF"
+ material="emissive:#168CFF;emissiveIntensity:0.8"></a-cylinder>
+<a-cylinder position="0.65 13.1 -5" radius="0.045" height="26" color="#58BFFF"
+ material="emissive:#168CFF;emissiveIntensity:0.8"></a-cylinder>
+
+<!-- GREEN BEANSTALK：1つ目のデザインを採用した4本の螺旋状ツタ -->
+<a-entity id="tower-vine" position="0 0 -5"></a-entity>
+
+<!-- SEVEN RINGS -->
+<a-torus position="0 1.8 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 5.2 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 8.6 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 12 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 15.4 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 18.8 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-torus position="0 22.2 -5" radius="1.5" radius-tubular="0.09" rotation="90 0 0" color="#00DFFF" material="emissive:#00CCFF;emissiveIntensity:2"></a-torus>
+<a-text value="THE SPACE ELEVATOR" position="1.8 5 -5" color="#9CEBFF" width="6"></a-text>
+
+<!-- MOON -->
+<a-entity id="moon"
+          position="3900 144.1 295"
+          scale="10 10 10"
+          animation="property:rotation;to:0 360 0;dur:180000;loop:true;easing:linear">
+
+  <a-sphere id="moon-body"
+            radius="97.5"
+            material="shader:standard; color:#BDBDBD; roughness:1">
+  </a-sphere>
+
+  <a-entity id="moon-craters"></a-entity>
+
+  <a-text value="THE MOON"
+          position="-35 112 0"
+          color="#FFFFFF"
+          width="100"
+          align="center">
+  </a-text>
+</a-entity>
+
+<script>
+(function () {
+  const moon = document.querySelector("#moon");
+  if (!moon || moon.dataset.cratersGenerated) return;
+
+  function generateCraters() {
+    if (moon.dataset.cratersGenerated) return;
+    moon.dataset.cratersGenerated = "true";
+
+    const THREE = AFRAME.THREE;
+    const R = 97.5;
+    let seed = 20261121;
+    function random() {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    }
+
+    const maria = [
+      { x: 0.15, y: 0.25, z: 0.95, size: 0.42 },
+      { x: -0.45, y: 0.35, z: 0.82, size: 0.24 },
+      { x: 0.55, y: -0.15, z: 0.82, size: 0.20 },
+      { x: -0.10, y: -0.65, z: 0.75, size: 0.18 },
+      { x: 0.15, y: 0.25, z: -0.95, size: 0.12 }
+    ];
+
+    const pitMaterials = ["#686868", "#747474", "#808080", "#898989", "#929292"]
+      .map(color => new THREE.MeshStandardMaterial({
+        color, roughness: 1, metalness: 0, side: THREE.DoubleSide
+      }));
+    const rimMaterial = new THREE.MeshStandardMaterial({
+      color: "#D0D0D0", roughness: 1, metalness: 0, side: THREE.DoubleSide
+    });
+
+    const count = 420;
+    for (let i = 0; i < count; i++) {
+      const y = 1 - 2 * (i + random()) / count;
+      const angle = i * Math.PI * (3 - Math.sqrt(5)) + (random() - 0.5) * 0.12;
+      const ring = Math.sqrt(1 - y * y);
+      const normal = new THREE.Vector3(
+        Math.cos(angle) * ring, y, Math.sin(angle) * ring
+      ).normalize();
+
+      let density = 1;
+      for (const sea of maria) {
+        const center = new THREE.Vector3(sea.x, sea.y, sea.z).normalize();
+        const distance = normal.angleTo(center);
+        if (distance < sea.size) {
+          density *= 0.12 + 0.88 * Math.min(1, distance / sea.size);
+        }
+      }
+      if (random() > density) continue;
+
+      const type = random();
+      const size = type < 0.08 ? 9 + random() * 7
+        : type < 0.35 ? 4 + random() * 5
+        : 1.5 + random() * 3.5;
+
+      const crater = new THREE.Group();
+      crater.position.copy(normal.clone().multiplyScalar(R + 0.08));
+      crater.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+
+      const pit = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 12, 8),
+        pitMaterials[Math.floor(random() * pitMaterials.length)]
+      );
+      pit.scale.set(1, 1, 0.055);
+      crater.add(pit);
+
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(size * 0.94, Math.max(0.12, size * 0.055), 6, 24),
+        rimMaterial
+      );
+      rim.position.z = 0.08;
+      crater.add(rim);
+      moon.object3D.add(crater);
+    }
+  }
+
+  if (moon.hasLoaded) generateCraters();
+  else moon.addEventListener("loaded", generateCraters, { once: true });
+})();
+</script>
+<!-- EARTH -->
+<a-entity id="earth" position="-390 0 -35" scale="0.85 0.85 0.85" animation="property:rotation;to:0 360 0;dur:140000;loop:true;easing:linear">
+<a-sphere id="earth-ocean" radius="78" color="#1766C2" material="shader:flat;color:#1766C2"></a-sphere>
+<a-sphere position="-22 30 68" radius="23" scale="1.1 0.45 0.25" rotation="0 0 -25" color="#3D9956" material="shader:flat;color:#3D9956"></a-sphere>
+<a-sphere position="30 5 70" radius="19" scale="0.7 1.2 0.25" rotation="0 0 25" color="#5CA85B" material="shader:flat;color:#5CA85B"></a-sphere>
+<a-sphere position="-5 -37 67" radius="18" scale="0.65 1.2 0.25" rotation="0 0 15" color="#3C8E50" material="shader:flat;color:#3C8E50"></a-sphere>
+<a-sphere position="43 43 60" radius="12" scale="1.2 0.5 0.25" color="#77AE5C" material="shader:flat;color:#77AE5C"></a-sphere>
+<a-sphere position="0 74 10" radius="17" scale="1 0.25 1" color="#DCEFFF" material="shader:flat;color:#DCEFFF"></a-sphere>
+<a-sphere position="0 -74 10" radius="14" scale="1 0.25 1" color="#DCEFFF" material="shader:flat;color:#DCEFFF"></a-sphere>
+<a-sphere radius="80" material="shader:flat;color:#55BFFF;transparent:true;opacity:0.12;side:back"></a-sphere>
+<a-text value="EARTH" position="-25 91 0" color="#A8E5FF" width="75" align="center"></a-text>
+</a-entity>
+
+<!-- APOLLO 11 -->
+<a-entity id="apollo11" position="252 0 -59" rotation="0 25 0" scale="12.0 12.0 12.0" animation="property:position;from:252 0 -59;to:252 2 -59;dur:6000;dir:alternate;loop:true;easing:easeInOutSine">
+<a-cone position="0 0.25 0" radius-bottom="0.9" radius-top="0.48" height="1.2" color="#D7C9A4" material="shader:flat;color:#D7C9A4"></a-cone>
+<a-cylinder position="0 -0.25 0" radius="0.75" height="0.25" color="#B6A887" material="shader:flat;color:#B6A887"></a-cylinder>
+<a-cylinder position="-0.85 -0.75 0" radius="0.045" height="1.2" rotation="0 0 -35" color="#D5D2C8" material="shader:flat;color:#D5D2C8"></a-cylinder>
+<a-cylinder position="0.85 -0.75 0" radius="0.045" height="1.2" rotation="0 0 35" color="#D5D2C8" material="shader:flat;color:#D5D2C8"></a-cylinder>
+<a-cylinder position="0 -1.3 0" radius="0.045" height="0.6" color="#D5D2C8" material="shader:flat;color:#D5D2C8"></a-cylinder>
+<a-sphere position="-1.15 -1.35 0" radius="0.18" color="#C6B98F" material="shader:flat;color:#C6B98F"></a-sphere>
+<a-sphere position="1.15 -1.35 0" radius="0.18" color="#C6B98F" material="shader:flat;color:#C6B98F"></a-sphere>
+<a-box position="0 0.35 0.46" width="0.5" height="0.35" depth="0.08" color="#244B67" material="shader:flat;color:#244B67"></a-box>
+<a-sphere position="0 1.05 0" radius="0.48" color="#C9C2A8" material="shader:flat;color:#C9C2A8"></a-sphere>
+<a-box position="0 1.25 0.25" width="0.6" height="0.35" depth="0.08" color="#253E5B" material="shader:flat;color:#253E5B"></a-box>
+<a-cylinder position="0.65 1.15 0" radius="0.025" height="0.8" rotation="0 0 -55" color="#E4E1D6" material="shader:flat;color:#E4E1D6"></a-cylinder>
+<a-text value="APOLLO 11" position="-1.8 2 0" color="#FFFFFF" width="4" align="center"></a-text>
+</a-entity>
+
+<!-- ROCKET -->
+<a-entity id="space-rocket" position="-180 0 -50" rotation="0 0 -25" scale="7.0 7.0 7.0" animation="property:position;from:-180 0 -50;to:-177 2 -50;dur:5000;dir:alternate;loop:true;easing:easeInOutSine">
+<a-cylinder radius="0.38" height="3.8" color="#E6E9F0" material="shader:flat;color:#E6E9F0"></a-cylinder>
+<a-cone position="0 2.15 0" radius-bottom="0.38" radius-top="0" height="1" color="#DDE8F4" material="shader:flat;color:#DDE8F4"></a-cone>
+<a-cylinder position="0 -2 0" radius="0.28" height="0.4" color="#667080" material="shader:flat;color:#667080"></a-cylinder>
+<a-box position="-0.38 -1.45 0" width="0.75" height="0.8" depth="0.12" rotation="0 0 -20" color="#C43D52" material="shader:flat;color:#C43D52"></a-box>
+<a-box position="0.38 -1.45 0" width="0.75" height="0.8" depth="0.12" rotation="0 0 20" color="#C43D52" material="shader:flat;color:#C43D52"></a-box>
+<a-sphere position="0 0.6 0.34" radius="0.15" color="#3ECFFF" material="shader:flat;color:#3ECFFF"></a-sphere>
+<a-cone position="0 -2.6 0" radius-bottom="0.45" radius-top="0.15" height="1.4" color="#FF9B37" material="shader:flat;color:#FF9B37"
+ animation="property:scale;from:1 1 1;to:1 1.25 1;dur:700;dir:alternate;loop:true"></a-cone>
+<a-text value="ROCKET" position="-1 2.8 0" color="#FFFFFF" width="4" align="center"></a-text>
+</a-entity>
+
+<!-- ISS -->
+<a-entity id="space-station"
+          position="-292.5 3.275 -27.5"
+          rotation="0 -20 0"
+          scale="6.25 6.25 6.25"
+          animation="property:position;from:-292.5 3.275 -27.5;to:-290.5 4.5 -27.5;dur:9000;dir:alternate;loop:true;easing:easeInOutSine">
+<a-cylinder radius="0.35" height="3.8" rotation="0 0 90" color="#C8D2DF" material="shader:flat;color:#C8D2DF"></a-cylinder>
+<a-cylinder radius="0.3" height="1.6" color="#DDE5F0" material="shader:flat;color:#DDE5F0"></a-cylinder>
+<a-cylinder position="-2.8 0 0" radius="0.055" height="2" rotation="0 0 90" color="#AAB8CB" material="shader:flat;color:#AAB8CB"></a-cylinder>
+<a-cylinder position="2.8 0 0" radius="0.055" height="2" rotation="0 0 90" color="#AAB8CB" material="shader:flat;color:#AAB8CB"></a-cylinder>
+<a-box position="-4 0 0" width="2.3" height="2.5" depth="0.08" color="#244A91" material="shader:flat;color:#244A91"></a-box>
+<a-box position="4 0 0" width="2.3" height="2.5" depth="0.08" color="#244A91" material="shader:flat;color:#244A91"></a-box>
+<a-box position="-4 0 0.06" width="0.035" height="2.5" depth="0.02" color="#72CFFF" material="shader:flat;color:#72CFFF"></a-box>
+<a-box position="4 0 0.06" width="0.035" height="2.5" depth="0.02" color="#72CFFF" material="shader:flat;color:#72CFFF"></a-box>
+<a-text value="SPACE STATION" position="-2 2.2 0" color="#FFFFFF" width="5" align="center"></a-text>
+</a-entity>
+
+<!-- SATURN-->
+<a-entity id="saturn" position="1200 34 -3855" scale="1.44 1.44 1.44" animation="property:rotation;to:0 360 0;dur:200000;loop:true;easing:linear">
+<a-sphere radius="42" color="#D6B77D" material="shader:flat;color:#D6B77D"></a-sphere>
+<a-torus radius="48" radius-tubular="5" rotation="68 0 18" color="#D8C39A" material="shader:flat;color:#D8C39A;side:double"></a-torus>
+<a-torus radius="58" radius-tubular="3" rotation="68 0 18" color="#A98B65" material="shader:flat;color:#A98B65;side:double"></a-torus>
+<a-torus radius="35" radius-tubular="2" rotation="68 0 18" color="#E9D1A0" material="shader:flat;color:#E9D1A0;side:double"></a-torus>
+<a-text value="SATURN" position="-30 65 0" color="#F2D8A5" width="60" align="center"></a-text>
+</a-entity>
+
+<!-- JUPITER -->
+<a-entity id="jupiter" position="-1150 29 -4155" scale="1.32 1.32 1.32" animation="property:rotation;to:0 360 0;dur:160000;loop:true;easing:linear">
+<a-sphere radius="58" color="#D9B18A" material="shader:flat;color:#D9B18A"></a-sphere>
+<a-torus radius="55" radius-tubular="4" rotation="90 0 0" color="#A86F4D" material="shader:flat;color:#A86F4D"></a-torus>
+<a-torus radius="47" radius-tubular="3" rotation="90 0 0" color="#F0D2AC" material="shader:flat;color:#F0D2AC"></a-torus>
+<a-torus radius="39" radius-tubular="3" rotation="90 0 0" color="#B87955" material="shader:flat;color:#B87955"></a-torus>
+<a-sphere position="15 -8 55" radius="8" scale="1.3 0.65 0.25" color="#B9573D" material="shader:flat;color:#B9573D"></a-sphere>
+<a-text value="JUPITER" position="-35 75 0" color="#F3D7B7" width="70" align="center"></a-text>
+</a-entity>
+
+<!-- MARS -->
+<a-entity id="mars" position="1950 8 -3555" scale="2.7 2.7 2.7" animation="property:rotation;to:0 360 0;dur:150000;loop:true;easing:linear">
+<a-sphere radius="28" color="#C95735" material="shader:flat;color:#C95735"></a-sphere>
+<a-sphere position="12 8 23" radius="8" color="#8F382B" material="shader:flat;color:#8F382B"></a-sphere>
+<a-text value="MARS" position="-20 42 0" color="#F2B29B" width="40" align="center"></a-text>
+</a-entity>
+
+<!-- NEPTUNE -->
+<a-entity id="neptune" position="-2000 12 -4655" scale="2.1 2.1 2.1" animation="property:rotation;to:0 360 0;dur:190000;loop:true;easing:linear">
+<a-sphere radius="35" color="#176BE5" material="shader:flat;color:#176BE5"></a-sphere>
+<a-sphere position="5 8 31" radius="9" scale="1 0.25 0.15" color="#5BA9FF" material="shader:flat;color:#5BA9FF"></a-sphere>
+<a-text value="NEPTUNE" position="-30 48 0" color="#9CCBFF" width="60" align="center"></a-text>
+</a-entity>
+
+<!-- ENERGY PARTICLES -->
+<a-entity id="energy-particles">
+  <a-sphere position="-1.1 1.2 -3.5" radius="0.09" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.1 1.2 -3.5;to:-1.1 3.5 -3.5;dur:2600;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.1 2.5 -3.5" radius="0.08" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.1 2.5 -3.5;to:1.1 5.2 -3.5;dur:3100;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="-1.2 4.5 -3.6" radius="0.1" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.2 4.5 -3.6;to:-1.2 7 -3.6;dur:2900;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.2 6.5 -3.6" radius="0.08" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.2 6.5 -3.6;to:1.2 9 -3.6;dur:3300;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="-1.1 8.5 -3.5" radius="0.09" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.1 8.5 -3.5;to:-1.1 11 -3.5;dur:2800;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.1 10.5 -3.5" radius="0.1" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.1 10.5 -3.5;to:1.1 13 -3.5;dur:3000;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="-1.2 12.5 -3.6" radius="0.08" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.2 12.5 -3.6;to:-1.2 15 -3.6;dur:3200;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.2 14.5 -3.6" radius="0.09" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.2 14.5 -3.6;to:1.2 17 -3.6;dur:2700;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="-1.1 16.5 -3.5" radius="0.1" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.1 16.5 -3.5;to:-1.1 19 -3.5;dur:3000;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.1 18.5 -3.5" radius="0.08" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.1 18.5 -3.5;to:1.1 21 -3.5;dur:3400;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="-1.2 20.5 -3.6" radius="0.09" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:3" animation="property:position;from:-1.2 20.5 -3.6;to:-1.2 23 -3.6;dur:2800;loop:true;dir:alternate"></a-sphere>
+  <a-sphere position="1.2 22 -3.6" radius="0.1" color="#FFFFFF" material="emissive:#7CEBFF;emissiveIntensity:3" animation="property:position;from:1.2 22 -3.6;to:1.2 24.5 -3.6;dur:3100;loop:true;dir:alternate"></a-sphere>
+</a-entity>
+
+<!-- ORBITAL CLOUD CITY -->
+<a-cylinder position="0 26 -5" radius="6" height="0.6" color="#596C91"></a-cylinder>
+<a-torus position="0 26.25 -5" radius="5.6" radius-tubular="0.055" rotation="90 0 0" color="#58DFFF" material="emissive:#00BFFF;emissiveIntensity:1.5"></a-torus>
+<a-box position="-3.7 27.4 -6.8" width="1.4" height="2.2" depth="1.4" color="#7894C2"></a-box>
+<a-box position="3.7 27.8 -6.8" width="1.4" height="3" depth="1.4" color="#7894C2"></a-box>
+<a-box position="-3.8 27.2 -3.4" width="1.2" height="1.8" depth="1.2" color="#8BB8DB"></a-box>
+<a-box position="3.8 27.2 -3.4" width="1.2" height="1.8" depth="1.2" color="#8BB8DB"></a-box>
+<a-box position="-3.7 27.4 -6.07" width="0.12" height="1.5" depth="0.05" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:2"></a-box>
+<a-box position="3.7 27.5 -6.07" width="0.12" height="2" depth="0.05" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:2"></a-box>
+<a-sphere position="-3.7 28.6 -6.8" radius="0.75" color="#8AD9FF" material="transparent:true;opacity:0.65"></a-sphere>
+<a-sphere position="3.7 29.3 -6.8" radius="0.75" color="#8AD9FF" material="transparent:true;opacity:0.65"></a-sphere>
+<a-sphere position="-6.8 24.8 -6" radius="1.5" color="#D9E9FF" material="transparent:true;opacity:0.4;depthWrite:false"></a-sphere>
+<a-sphere position="6.8 24.8 -7" radius="1.5" color="#D9E9FF" material="transparent:true;opacity:0.4;depthWrite:false"></a-sphere>
+<a-sphere position="0 30 -13" radius="2" color="#D9E9FF" material="transparent:true;opacity:0.3;depthWrite:false"></a-sphere>
+<a-text value="ORBITAL CLOUD CITY" position="0 32.2 -7.2" color="#FFFFFF" width="7" align="center"></a-text>
+
+<!-- GUARDIAN PATROL PATH: the guardian circles the cloud city while carrying the Golden Core -->
+<a-entity id="guardian-patrol" position="0 0 0">
+<!-- ROBOT GUARDIAN (Clickable, subtle breathing hover, alarm eyes & core) -->
+<a-entity id="guardian" class="clickable" position="0 0 0"
+  animation="property:position;from:0 0 0;to:0 0.13 0;dur:2400;dir:alternate;loop:true;easing:easeInOutSine">
+  <a-box id="guardian-leg-l" position="-0.8 27.05 -5" width="0.6" height="1.4" depth="0.7" color="#B3B9C8"></a-box>
+  <a-box id="guardian-leg-r" position="0.8 27.05 -5" width="0.6" height="1.4" depth="0.7" color="#B3B9C8"></a-box>
+  <a-box class="clickable" position="0 28.6 -5" width="2.6" height="2" depth="1.2" color="#D1D7E4"></a-box>
+  <!-- Three chest status lights: cyan while active, dark after each hit, red while stunned -->
+  <a-box id="guardian-chest-light-1" position="-0.48 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
+  <a-box id="guardian-chest-light-2" position="0 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
+  <a-box id="guardian-chest-light-3" position="0.48 28.65 -5.625" width="0.25" height="0.22" depth="0.055" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
+  <a-sphere id="guardian-core" class="clickable" position="0 28.6 -4.35" radius="0.35" color="#00DFFF" material="emissive:#00DFFF;emissiveIntensity:2"></a-sphere>
+  <a-box class="clickable" position="0 30.05 -5" width="1.5" height="1.1" depth="1.1" color="#E0E4EC"></a-box>
+  <a-box id="guardian-eye-l" position="-0.4 30.1 -4.42" width="0.25" height="0.2" depth="0.08" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
+  <a-box id="guardian-eye-r" position="0.4 30.1 -4.42" width="0.25" height="0.2" depth="0.08" color="#00EFFF" material="emissive:#00DFFF;emissiveIntensity:3"></a-box>
+  <a-box id="guardian-arm-l" position="-1.8 28.6 -5" width="0.6" height="2" depth="0.7" rotation="0 0 15" color="#A7B5CC"></a-box>
+  <a-box id="guardian-arm-r" position="1.8 28.6 -5" width="0.6" height="2" depth="0.7" rotation="0 0 -15" color="#A7B5CC"></a-box>
+  <a-sphere position="-1.8 29.5 -5" radius="0.5" color="#D1D7E4"></a-sphere>
+  <a-sphere position="1.8 29.5 -5" radius="0.5" color="#D1D7E4"></a-sphere>
+
+  <!-- GOLDEN CORE: attached to the guardian's right hand -->
+  <a-sphere id="golden-core" position="2.35 29.25 -4.15" radius="0.8" color="#FFD700"
+   material="emissive:#FFB700;emissiveIntensity:2;metalness:0.8;roughness:0.1"
+   animation__pulse="property:scale;from:1 1 1;to:1.18 1.18 1.18;dir:alternate;dur:1200;loop:true"></a-sphere>
+  <a-torus id="core-ring" position="2.35 29.25 -4.15" radius="1.2" radius-tubular="0.045" rotation="60 0 0" color="#FFD700"
+   material="emissive:#FFB700;emissiveIntensity:1.5"
+   animation="property:rotation;from:60 0 0;to:60 360 0;dur:5000;loop:true;easing:linear"></a-torus>
+  <a-text id="core-label" value="THE GOLDEN CORE" position="2.35 30.85 -4.15" align="center" color="#FFD700" width="5"></a-text>
+</a-entity>
+</a-entity>
+
+<!-- ASCEND PAD (Upright portal with spinning inner energy ring) -->
+<a-entity id="ascend-pad" class="clickable" position="2.95 0.255 -4.6">
+  <a-cylinder class="clickable" radius="0.9" height="0.22" position="0 0.11 0" color="#087DFF" material="emissive:#087DFF;emissiveIntensity:2"></a-cylinder>
+  <a-torus class="clickable" radius="0.83" radius-tubular="0.055" position="0 1.02 0" color="#00EFFF" material="emissive:#00CFFF;emissiveIntensity:3"></a-torus>
+  <a-torus class="clickable" radius="0.62" radius-tubular="0.025" position="0 1.02 0" color="#BDFBFF" material="emissive:#62EFFF;emissiveIntensity:2.5"
+    animation="property:rotation;to:0 360 0;dur:4000;loop:true;easing:linear"></a-torus>
+  <a-cylinder class="clickable" radius="0.58" height="0.025" position="0 0.23 0" color="#65E5FF" material="emissive:#00AFFF;emissiveIntensity:2.5"></a-cylinder>
+  <a-text value="ASCEND" position="0 2.25 0" align="center" color="#FFFFFF" width="4"></a-text>
+  <a-text value="CLICK TO GO UP" position="0 1.98 0" align="center" color="#80DFFF" width="2.8"></a-text>
+</a-entity>
+
+<!-- RETURN PAD (Starts LOCKED until the Golden Core is collected) -->
+<a-entity id="return-pad" class="clickable" position="2.2 26.38 -1.8">
+  <a-cylinder id="return-base" class="clickable" radius="0.8" height="0.16" position="0 0 0" color="#4A5568" material="emissive:#2D3748;emissiveIntensity:0.6"></a-cylinder>
+  <a-torus id="return-ring-outer" class="clickable" radius="0.72" radius-tubular="0.05" position="0 0.82 0" color="#FF5555" material="emissive:#CC2222;emissiveIntensity:1.2"></a-torus>
+  <a-torus id="return-ring-inner" class="clickable" visible="false" radius="0.52" radius-tubular="0.022" position="0 0.82 0" color="#E0FFF0" material="emissive:#35FF99;emissiveIntensity:2"
+    animation="property:rotation;to:0 -360 0;dur:4000;loop:true;easing:linear"></a-torus>
+  <a-text id="return-label" value="LOCKED" position="0 1.85 0" align="center" color="#FF8888" width="3"></a-text>
+</a-entity>
+
+<!-- CAMERA -->
+<a-entity id="camera-rig" position="0 0 7">
+  <a-camera id="main-camera" camera="near:0.1;far:30000" wasd-controls="acceleration:25" look-controls="pointerLockEnabled:false">
+    <a-cursor id="gaze-cursor" fuse="false" fuseTimeout="1200" raycaster="objects:.clickable;far:100;interval:50" color="#FFD700" material="shader:flat"></a-cursor>
+    <a-text id="hud-message" value="FIND THE PULSE BLASTER NEAR THE TOWER" position="0 -0.65 -2.5" align="center" color="#FFFFFF" width="3.8"></a-text>
+  </a-camera>
+</a-entity>
+<a-entity id="mouse-cursor" cursor="rayOrigin:mouse;fuse:false" raycaster="objects:.clickable;far:100;interval:50"></a-entity>
+
+</a-scene>
+
+<!-- Ammo HUD appears only after collecting the Pulse Blaster. -->
+<div id="ammo-hud" aria-live="polite">
+  <div id="ammo-hud-title">PULSE BLASTER</div>
+  <div id="ammo-hud-count">AMMO: 5 / 5</div>
+  <div id="ammo-hud-indicators">
+    <span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span><span class="ammo-dot"></span>
+  </div>
+</div>
+<div id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+  <h1 id="game-over-title">GAME OVER</h1>
+  <p>ALL PULSE BLASTER AMMO HAS BEEN USED.</p>
+  <button id="retry-button" type="button">RETRY</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const scene = document.querySelector("#world");
+
+  // --- Procedural Web Audio API Synthesizer (zero external files) ---
+  let audioCtx = null;
+  let alarmInterval = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playTone(freq, duration, type = "sine", volume = 0.08, endFreq = null) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  function playHoverChime() {
+    playTone(660, 0.12, "sine", 0.04, 880);
+  }
+
+  function playLockedBuzz() {
+    playTone(140, 0.22, "sawtooth", 0.06, 95);
+  }
+
+  // A crisp electronic laser burst whenever the player fires (hit or miss).
+  function playBlasterFireSound() {
+    playTone(980, 0.075, "sawtooth", 0.065, 260);
+    setTimeout(() => playTone(420, 0.11, "square", 0.045, 120), 28);
+  }
+
+  // A layered impact / shield-hit sound whenever the Guardian damages the player.
+  function playDamageSound() {
+    playTone(155, 0.24, "sawtooth", 0.12, 38);
+    setTimeout(() => playTone(68, 0.28, "triangle", 0.10, 26), 35);
+    setTimeout(() => playTone(510, 0.07, "square", 0.045, 90), 8);
+  }
+
+  function playElevatorSound(goingUp, durationMs) {
+    const dur = durationMs / 1000;
+    playTone(goingUp ? 110 : 320, dur, "triangle", 0.07, goingUp ? 360 : 100);
+  }
+
+  function playCoreFanfare() {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      setTimeout(() => playTone(f, 0.35, "sine", 0.09), i * 90);
+    });
+  }
+
+  function startAlarmSound() {
+    if (alarmInterval) return;
+    playTone(220, 0.35, "sawtooth", 0.045, 160);
+    alarmInterval = setInterval(() => {
+      playTone(220, 0.35, "sawtooth", 0.045, 160);
+    }, 1100);
+  }
+
+  function stopAlarmSound() {
+    if (alarmInterval) {
+      clearInterval(alarmInterval);
+      alarmInterval = null;
+    }
+  }
+
+  function playVictoryChord() {
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+      setTimeout(() => playTone(f, 0.8, "triangle", 0.08), i * 110);
+    });
+  }
+
+  scene.addEventListener("loaded", function () {
+    // 1. Disable fog & tone-mapping on distant objects in-place (preserving <a-text> ShaderMaterials)
+    const visibleGroups = [
+      "#moon", "#earth", "#apollo11", "#space-rocket",
+      "#space-station", "#saturn", "#jupiter", "#mars", "#neptune"
+    ];
+
+    visibleGroups.forEach(selector => {
+      const root = document.querySelector(selector);
+      if (!root) return;
+
+      root.object3D.traverse(object => {
+        if (!object.isMesh || !object.material) return;
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach(mat => {
+          if (!mat || mat.type === "ShaderMaterial") return;
+          mat.fog = false;
+          mat.toneMapped = false;
+          mat.needsUpdate = true;
+        });
+      });
+    });
+
+    // 2. Optimized Starfield (1 draw call via THREE.Points on a distant spherical shell)
+    const starsEl = document.querySelector("#stars");
+    const starCount = 800;
+    const positions = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      const r = 140 + Math.random() * 120;
+
+      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+    }
+
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.7,
+      sizeAttenuation: true,
+      fog: false,
+      toneMapped: false
+    });
+    starsEl.setObject3D("mesh", new THREE.Points(starGeo, starMat));
+
+    // 2.5. Generate four spiral vines with leaves and tendrils.
+    // The geometry is created after the scene is ready to avoid empty-curve errors.
+    const vineRoot = document.querySelector("#tower-vine");
+    if (vineRoot && !vineRoot.dataset.created) {
+      vineRoot.dataset.created = "true";
+      const THREE = AFRAME.THREE;
+      const height = 26;
+      const vineCount = 4;
+      const turns = 4.5;
+      const vineRadius = 1.15;
+      const segments = 500;
+      const vineMaterial = new THREE.MeshStandardMaterial({
+        color: "#238B35", roughness: 0.8, metalness: 0,
+        emissive: "#103D16", emissiveIntensity: 0.25
+      });
+      const leafMaterial = new THREE.MeshStandardMaterial({
+        color: "#39A844", roughness: 0.75, side: THREE.DoubleSide
+      });
+      const leafLightMaterial = new THREE.MeshStandardMaterial({
+        color: "#70C957", roughness: 0.8, side: THREE.DoubleSide
+      });
+
+      for (let v = 0; v < vineCount; v++) {
+        const offset = (Math.PI * 2 / vineCount) * v;
+        const points = [];
+        for (let i = 0; i <= segments; i++) {
+          const t = i / segments;
+          const angle = t * turns * Math.PI * 2 + offset;
+          points.push(new THREE.Vector3(
+            Math.cos(angle) * vineRadius, t * height,
+            Math.sin(angle) * vineRadius
+          ));
+        }
+        const curve = new THREE.CatmullRomCurve3(points);
+        vineRoot.object3D.add(new THREE.Mesh(
+          new THREE.TubeGeometry(curve, segments, 0.10, 8, false),
+          vineMaterial
+        ));
+
+        // Leaves are distributed along every strand, alternating sides.
+        for (let i = 0; i < 22; i++) {
+          const t = (i + 0.5) / 22;
+          const angle = t * turns * Math.PI * 2 + offset;
+          const radial = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)).normalize();
+          const side = i % 2 === 0 ? 1 : -1;
+          const outward = radial.clone().multiplyScalar(0.7).add(
+            new THREE.Vector3(-Math.sin(angle) * side * 0.8, 0.15,
+                              Math.cos(angle) * side * 0.8)
+          ).normalize();
+          const center = new THREE.Vector3(
+            Math.cos(angle) * vineRadius, t * height,
+            Math.sin(angle) * vineRadius
+          );
+          const leafPosition = center.clone().add(outward.clone().multiplyScalar(0.55));
+          const leaf = new THREE.Mesh(
+            new THREE.SphereGeometry(1, 12, 8),
+            i % 3 === 0 ? leafLightMaterial : leafMaterial
+          );
+          leaf.position.copy(leafPosition);
+          leaf.scale.set(0.48 + Math.random() * 0.18, 0.10, 0.24);
+          leaf.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), outward);
+          vineRoot.object3D.add(leaf);
+
+          const vein = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.012, 0.012, 0.65, 5), leafLightMaterial
+          );
+          vein.position.copy(leafPosition);
+          vein.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), outward);
+          vineRoot.object3D.add(vein);
+        }
+
+        // Small curling tendrils along each main vine.
+        for (let i = 0; i < 10; i++) {
+          const t = (i + 0.5) / 10;
+          const angle = t * turns * Math.PI * 2 + offset;
+          const start = new THREE.Vector3(
+            Math.cos(angle) * vineRadius, t * height,
+            Math.sin(angle) * vineRadius
+          );
+          const curlPoints = [];
+          for (let j = 0; j <= 20; j++) {
+            const u = j / 20;
+            const a = u * Math.PI * 2;
+            curlPoints.push(new THREE.Vector3(
+              start.x + Math.cos(angle + a) * 0.3 * u,
+              start.y + 0.35 * u,
+              start.z + Math.sin(angle + a) * 0.3 * u
+            ));
+          }
+          const curlCurve = new THREE.CatmullRomCurve3(curlPoints);
+          vineRoot.object3D.add(new THREE.Mesh(
+            new THREE.TubeGeometry(curlCurve, 24, 0.025, 5, false),
+            vineMaterial
+          ));
+        }
+      }
+    }
+
+    // 3. VR-only fuse cursor so desktop mouse clicks aren't interrupted
+    const gazeCursor = document.querySelector("#gaze-cursor");
+    scene.addEventListener("enter-vr", () => gazeCursor.setAttribute("fuse", "true"));
+    scene.addEventListener("exit-vr", () => gazeCursor.setAttribute("fuse", "false"));
+
+    // 4. Interaction, Gameplay Loop, Live Altitude & Camera Toggle
+    const cameraRig = document.querySelector("#camera-rig");
+    const hud = document.querySelector("#hud-message");
+    const ascendPad = document.querySelector("#ascend-pad");
+    const returnPad = document.querySelector("#return-pad");
+    const returnBase = document.querySelector("#return-base");
+    const returnRingOuter = document.querySelector("#return-ring-outer");
+    const returnRingInner = document.querySelector("#return-ring-inner");
+    const returnLabel = document.querySelector("#return-label");
+    const goldenCore = document.querySelector("#golden-core");
+    const jack = document.querySelector("#jack");
+    const jackTrophy = document.querySelector("#jack-trophy");
+    const guardian = document.querySelector("#guardian");
+    const guardianPatrol = document.querySelector("#guardian-patrol");
+    const guardianCore = document.querySelector("#guardian-core");
+    const guardianEyeL = document.querySelector("#guardian-eye-l");
+    const guardianEyeR = document.querySelector("#guardian-eye-r");
+    const cityLight = document.querySelector("#city-light");
+    const pulseBlasterPickup = document.querySelector("#pulse-blaster-pickup");
+    const ammoHud = document.querySelector("#ammo-hud");
+    const ammoHudCount = document.querySelector("#ammo-hud-count");
+    const ammoDots = Array.from(document.querySelectorAll(".ammo-dot"));
+    const gameOverOverlay = document.querySelector("#game-over-overlay");
+    const retryButton = document.querySelector("#retry-button");
+    const guardianChestLights = [
+      document.querySelector("#guardian-chest-light-1"),
+      document.querySelector("#guardian-chest-light-2"),
+      document.querySelector("#guardian-chest-light-3")
+    ];
+    const mouseCursor = document.querySelector("#mouse-cursor");
+
+    let isTravelling = false;
+    let hasCollectedCore = false;
+    let missionComplete = false;
+    let isOverview = false;
+    let hasPulseBlaster = false;
+    let ammoRemaining = 5;
+    let isGameOver = false;
+    let lastHandledInteractionAt = 0;
+    let guardianHits = 0;
+    let guardianStunned = false;
+    let guardianStunPending = false;
+    let guardianStunTimer = null;
+    let guardianStunDelayTimer = null;
+    let guardianBlinkInterval = null;
+    let guardianRetaliationInterval = null;
+    const HITS_TO_STUN = 3;
+    const STUN_DURATION = 9000;
+    let savedPos = { x: 0, y: 0, z: 7 };
+    let defaultMessage = "FIND THE PULSE BLASTER NEAR THE TOWER";
+    let altitudeRaf = null;
+
+    // The Guardian runs around the cloud city in an evasive, zig-zagging route.
+    // The Golden Core remains attached to its hand because it is nested inside it.
+    const guardianLegL = document.querySelector("#guardian-leg-l");
+    const guardianLegR = document.querySelector("#guardian-leg-r");
+    const guardianArmL = document.querySelector("#guardian-arm-l");
+    const guardianArmR = document.querySelector("#guardian-arm-r");
+
+    [guardianLegL, guardianLegR, guardianArmL, guardianArmR].forEach((limb) => {
+      limb.setAttribute("animation__run", {
+        property: "rotation",
+        from: limb === guardianLegL || limb === guardianArmR ? "38 0 0" : "-38 0 0",
+        to: limb === guardianLegL || limb === guardianArmR ? "-38 0 0" : "38 0 0",
+        dur: 260,
+        dir: "alternate",
+        loop: true,
+        easing: "linear"
+      });
+    });
+
+    function animateGuardianPatrol(timestamp) {
+      if (guardianStunned || guardianStunPending || isGameOver) {
+        requestAnimationFrame(animateGuardianPatrol);
+        return;
+      }
+      const t = timestamp * 0.00062;
+      const x = Math.cos(t) * 4.1 + Math.sin(t * 2.7) * 0.75;
+      const z = -5 + Math.sin(t) * 2.8 + Math.cos(t * 3.1) * 0.55;
+      const y = Math.abs(Math.sin(t * 5.4)) * 0.28;
+      guardianPatrol.object3D.position.set(x, y, z);
+
+      // Face the direction of travel so the Guardian appears to sprint away.
+      const dx = -4.1 * Math.sin(t) + 2.025 * Math.cos(t * 2.7);
+      const dz = 2.8 * Math.cos(t) - 1.705 * Math.sin(t * 3.1);
+      guardianPatrol.object3D.rotation.y = Math.atan2(-dx, -dz);
+      requestAnimationFrame(animateGuardianPatrol);
+    }
+    requestAnimationFrame(animateGuardianPatrol);
+    installEmptyClickAmmoHandler();
+    startGuardianRetaliation();
+
+    function markHandledInteraction() {
+      lastHandledInteractionAt = Date.now();
+    }
+
+    function setChestLights(mode, litCount = 3) {
+      guardianChestLights.forEach((light, index) => {
+        if (!light) return;
+        if (mode === "off" || (mode === "progress" && index < litCount)) {
+          light.setAttribute("color", "#17212D");
+          light.setAttribute("material", "emissive:#000000;emissiveIntensity:0");
+        } else if (mode === "red") {
+          light.setAttribute("color", "#FF263D");
+          light.setAttribute("material", "emissive:#FF001E;emissiveIntensity:4");
+        } else {
+          light.setAttribute("color", "#00EFFF");
+          light.setAttribute("material", "emissive:#00DFFF;emissiveIntensity:3");
+        }
+      });
+    }
+
+    function updateAmmoHud() {
+      if (!hasPulseBlaster) return;
+      ammoHud.style.display = "block";
+      ammoHudCount.textContent = `AMMO: ${ammoRemaining} / 5`;
+      ammoDots.forEach((dot, index) => dot.classList.toggle("spent", index >= ammoRemaining));
+    }
+
+    function triggerGameOver() {
+      if (isGameOver) return;
+      isGameOver = true;
+      stopAlarmSound();
+      if (guardianStunTimer) clearTimeout(guardianStunTimer);
+      if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
+      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
+      if (guardianRetaliationInterval) clearInterval(guardianRetaliationInterval);
+      gameOverOverlay.style.display = "flex";
+      // Disable all world interactions while leaving the HTML RETRY button usable.
+      document.querySelectorAll(".clickable").forEach((el) => el.classList.remove("clickable"));
+      if (scene.canvas) scene.canvas.style.pointerEvents = "none";
+      const gazeRaycaster = document.querySelector("#gaze-cursor");
+      if (gazeRaycaster) gazeRaycaster.setAttribute("raycaster", "enabled", false);
+      if (mouseCursor) mouseCursor.setAttribute("raycaster", "enabled", false);
+    }
+
+    function consumeAmmo(reason) {
+      if (!hasPulseBlaster || isGameOver || ammoRemaining <= 0) return false;
+      ammoRemaining = Math.max(0, ammoRemaining - 1);
+      updateAmmoHud();
+      // A shot is audible for both a successful Guardian hit and an empty-space miss.
+      if (reason === "hit" || reason === "miss") playBlasterFireSound();
+      if (reason === "miss") {
+        showMessage("SHOT MISSED — AMMO -1", false, "#FFCC77");
+      } else if (reason === "retaliation") {
+        playDamageSound();
+        showMessage("GUARDIAN COUNTERATTACK — AMMO -1", false, "#FF7777");
+      }
+      if (ammoRemaining === 0) {
+        triggerGameOver();
+        return false;
+      }
+      return true;
+    }
+
+    function isPlayerInCloudCity() {
+      const p = cameraRig.object3D.position;
+      const dx = p.x;
+      const dz = p.z + 5;
+      return p.y >= 22 && p.y <= 36 && Math.sqrt(dx * dx + dz * dz) <= 13;
+    }
+
+    function startGuardianRetaliation() {
+      if (guardianRetaliationInterval) clearInterval(guardianRetaliationInterval);
+      guardianRetaliationInterval = setInterval(() => {
+        if (isGameOver || !hasPulseBlaster || hasCollectedCore || guardianStunned || guardianStunPending || isTravelling) return;
+        if (!isPlayerInCloudCity()) return;
+        consumeAmmo("retaliation");
+      }, 7000);
+    }
+
+    // Empty-space/background clicks consume one shot. Clicks on existing game objects
+    // are exempt; Guardian clicks are charged by the Guardian handler itself.
+    function installEmptyClickAmmoHandler() {
+      const canvas = scene.canvas;
+      if (!canvas) return;
+      canvas.addEventListener("click", () => {
+        if (!hasPulseBlaster || isGameOver) return;
+        setTimeout(() => {
+          if (isGameOver || Date.now() - lastHandledInteractionAt < 140) return;
+          const raycaster = mouseCursor && mouseCursor.components && mouseCursor.components.raycaster;
+          const intersections = raycaster && raycaster.intersectedEls ? raycaster.intersectedEls : [];
+          const hitExistingClickable = intersections.some((el) => el && el.classList && el.classList.contains("clickable"));
+          if (hitExistingClickable) return;
+          consumeAmmo("miss");
+        }, 0);
+      });
+    }
+
+    retryButton.addEventListener("click", () => window.location.reload());
+
+    function showMessage(message, setAsDefault = false, color = "#FFFFFF") {
+      if (setAsDefault) defaultMessage = message;
+      hud.setAttribute("value", message);
+      hud.setAttribute("color", color);
+    }
+
+    function updateAltitudeHUD(label) {
+      if (!isTravelling) return;
+      const y = Math.max(0, cameraRig.object3D.position.y);
+      const altMeters = Math.round((y / 26.3) * 35786);
+      hud.setAttribute("value", `${label} | ALTITUDE: ${altMeters.toLocaleString()} m`);
+      altitudeRaf = requestAnimationFrame(() => updateAltitudeHUD(label));
+    }
+
+    function travelTo(x, y, z, duration, travelLabel, onArrive) {
+      if (isTravelling) return;
+      isTravelling = true;
+      isOverview = false;
+      const goingUp = y > cameraRig.object3D.position.y;
+      playElevatorSound(goingUp, duration);
+      cameraRig.removeAttribute("animation__travel");
+
+      const onFinish = function () {
+        cameraRig.removeAttribute("animation__travel");
+        cameraRig.removeEventListener("animationcomplete__travel", onFinish);
+        if (altitudeRaf) cancelAnimationFrame(altitudeRaf);
+        isTravelling = false;
+        if (onArrive) onArrive();
+      };
+
+      cameraRig.addEventListener("animationcomplete__travel", onFinish);
+      cameraRig.setAttribute("animation__travel", {
+        property: "position",
+        to: `${x} ${y} ${z}`,
+        dur: duration,
+        easing: "easeInOutQuad"
+      });
+      updateAltitudeHUD(travelLabel);
+    }
+
+    ascendPad.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver) return;
+      travelTo(0, 26.3, -0.2, 8000, "ASCENDING", () => {
+        if (hasCollectedCore && !missionComplete) {
+          showMessage("ALERT! ESCAPE TO THE RETURN PAD!", true, "#FF6B6B");
+        } else {
+          showMessage("ORBITAL CLOUD CITY — FIND THE GOLDEN CORE", true, "#FFFFFF");
+        }
+      });
+    });
+
+    returnPad.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver || isTravelling) return;
+      if (!hasCollectedCore) {
+        playLockedBuzz();
+        showMessage("RETURN PORTAL LOCKED — COLLECT THE GOLDEN CORE FIRST!", false, "#FF6B6B");
+        return;
+      }
+      stopAlarmSound();
+      travelTo(0, 0, 7, 7000, "DESCENDING", () => {
+        if (!missionComplete) {
+          missionComplete = true;
+          jackTrophy.setAttribute("visible", "true");
+          playVictoryChord();
+          showMessage("MISSION COMPLETE! JACK HAS THE GOLDEN CORE!", true, "#FFD700");
+        } else {
+          showMessage("WELCOME BACK TO THE FLOATING ISLAND", true, "#FFFFFF");
+        }
+      });
+    });
+
+    function playPulseSound() {
+      playTone(520, 0.16, "square", 0.07, 150);
+    }
+
+    function showPulseBeam() {
+      const THREE = AFRAME.THREE;
+      const camera = document.querySelector("#main-camera");
+      camera.object3D.updateMatrixWorld(true);
+      guardian.object3D.updateMatrixWorld(true);
+      const start = new THREE.Vector3();
+      camera.object3D.getWorldPosition(start);
+      const end = guardian.object3D.localToWorld(new THREE.Vector3(0, 29, -5));
+      const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+      const material = new THREE.LineBasicMaterial({ color: 0x62efff, transparent: true, opacity: 0.95 });
+      const beam = new THREE.Line(geometry, material);
+      scene.object3D.add(beam);
+      setTimeout(() => {
+        scene.object3D.remove(beam);
+        geometry.dispose();
+        material.dispose();
+      }, 180);
+    }
+
+    function setGuardianRunAnimation(enabled) {
+      [guardianLegL, guardianLegR, guardianArmL, guardianArmR].forEach((limb) => {
+        if (!limb) return;
+        if (enabled) {
+          limb.setAttribute("animation__run", {
+            property: "rotation",
+            from: limb === guardianLegL || limb === guardianArmR ? "38 0 0" : "-38 0 0",
+            to: limb === guardianLegL || limb === guardianArmR ? "-38 0 0" : "38 0 0",
+            dur: 260, dir: "alternate", loop: true, easing: "linear"
+          });
+        } else {
+          limb.removeAttribute("animation__run");
+          limb.object3D.rotation.set(0, 0, 0);
+        }
+      });
+    }
+
+    function stunGuardian() {
+      guardianStunPending = false;
+      guardianStunned = true;
+      setChestLights("red");
+      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
+      let redVisible = true;
+      guardianBlinkInterval = setInterval(() => {
+        if (!guardianStunned || isGameOver) return;
+        redVisible = !redVisible;
+        guardianChestLights.forEach((light) => {
+          if (!light) return;
+          light.setAttribute("visible", redVisible);
+        });
+      }, 300);
+      guardian.removeAttribute("animation");
+      setGuardianRunAnimation(false);
+      guardianEyeL.setAttribute("color", "#FFFFFF");
+      guardianEyeR.setAttribute("color", "#FFFFFF");
+      guardianEyeL.setAttribute("material", "emissive:#FFFFFF;emissiveIntensity:5");
+      guardianEyeR.setAttribute("material", "emissive:#FFFFFF;emissiveIntensity:5");
+      guardian.setAttribute("animation__stun", {
+        property: "rotation", from: "0 0 0", to: "0 0 7", dur: 180, dir: "alternate", loop: 3
+      });
+      goldenCore.classList.add("clickable");
+      showMessage("GUARDIAN STUNNED! CLICK THE GOLDEN CORE NOW!", true, "#FFD700");
+      playCoreFanfare();
+
+      guardianStunTimer = setTimeout(() => {
+        if (hasCollectedCore) return;
+        guardianStunned = false;
+        guardianHits = 0;
+        if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
+        guardianBlinkInterval = null;
+        guardianChestLights.forEach((light) => light && light.setAttribute("visible", "true"));
+        setChestLights("blue");
+        goldenCore.classList.remove("clickable");
+        guardian.removeAttribute("animation__stun");
+        guardian.object3D.rotation.set(0, 0, 0);
+        guardian.setAttribute("animation", {
+          property: "position", from: "0 0 0", to: "0 0.13 0", dur: 2400, dir: "alternate", loop: true, easing: "easeInOutSine"
+        });
+        setGuardianRunAnimation(true);
+        guardianEyeL.setAttribute("color", "#FF2222");
+        guardianEyeR.setAttribute("color", "#FF2222");
+        guardianEyeL.setAttribute("material", "emissive:#FF0000;emissiveIntensity:4");
+        guardianEyeR.setAttribute("material", "emissive:#FF0000;emissiveIntensity:4");
+        showMessage("THE GUARDIAN ESCAPED! HIT IT 3 TIMES AGAIN!", true, "#FF7777");
+      }, STUN_DURATION);
+    }
+
+    pulseBlasterPickup.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver || hasPulseBlaster) return;
+      hasPulseBlaster = true;
+      updateAmmoHud();
+      playCoreFanfare();
+      pulseBlasterPickup.classList.remove("clickable");
+      pulseBlasterPickup.setAttribute("animation__pickup", {
+        property: "scale", to: "0 0 0", dur: 550, easing: "easeInBack"
+      });
+      setTimeout(() => pulseBlasterPickup.setAttribute("visible", "false"), 600);
+      showMessage("PULSE BLASTER ACQUIRED! CLICK THE GUARDIAN TO FIRE — 3 HITS TO STUN!", true, "#9CEBFF");
+    });
+
+    guardian.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver || hasCollectedCore || missionComplete) return;
+      if (!hasPulseBlaster) {
+        showMessage("YOU NEED THE PULSE BLASTER NEAR THE TOWER FIRST!", false, "#FFCC77");
+        return;
+      }
+      if (guardianStunned || guardianStunPending) {
+        showMessage("QUICK! THE GUARDIAN IS STUNNED — TAKE THE GOLDEN CORE!", false, "#FFD700");
+        return;
+      }
+      if (!consumeAmmo("hit")) return;
+      guardianHits = Math.min(HITS_TO_STUN, guardianHits + 1);
+      setChestLights("progress", guardianHits);
+      playPulseSound();
+      showPulseBeam();
+      const hitFlash = document.createElement("a-sphere");
+      hitFlash.setAttribute("position", "0 29 -4.15");
+      hitFlash.setAttribute("radius", "0.65");
+      hitFlash.setAttribute("color", "#62EFFF");
+      hitFlash.setAttribute("material", "emissive:#00DFFF;emissiveIntensity:4;transparent:true;opacity:0.8");
+      guardian.appendChild(hitFlash);
+      hitFlash.setAttribute("animation__flash", { property: "scale", from: "0.2 0.2 0.2", to: "2.4 2.4 2.4", dur: 280, easing: "easeOutQuad" });
+      setTimeout(() => hitFlash.remove(), 320);
+
+      if (guardianHits >= HITS_TO_STUN) {
+        // The third chest light goes dark immediately; red synchronized blinking
+        // and the 9-second stun begin exactly one second later.
+        guardianStunPending = true;
+        guardian.removeAttribute("animation");
+        setGuardianRunAnimation(false);
+        if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
+        guardianStunDelayTimer = setTimeout(() => {
+          if (!hasCollectedCore && !isGameOver) stunGuardian();
+        }, 1000);
+        showMessage("GUARDIAN SYSTEMS FAILING...", true, "#9CEBFF");
+      } else {
+        showMessage(`PULSE HIT ${guardianHits}/${HITS_TO_STUN} — KEEP FIRING!`, false, "#9CEBFF");
+      }
+    });
+
+    goldenCore.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver || hasCollectedCore) return;
+      if (!guardianStunned) {
+        showMessage("THE GOLDEN CORE IS PROTECTED! STUN THE GUARDIAN FIRST!", false, "#FF7777");
+        return;
+      }
+      if (guardianStunTimer) clearTimeout(guardianStunTimer);
+      if (guardianStunDelayTimer) clearTimeout(guardianStunDelayTimer);
+      if (guardianBlinkInterval) clearInterval(guardianBlinkInterval);
+      guardianBlinkInterval = null;
+      guardianStunPending = false;
+      hasCollectedCore = true;
+      guardianStunned = false;
+      guardianChestLights.forEach((light) => light && light.setAttribute("visible", "true"));
+      setChestLights("blue");
+      if (guardianStunTimer) clearTimeout(guardianStunTimer);
+      guardian.removeAttribute("animation__stun");
+      guardian.object3D.rotation.set(0, 0, 0);
+      playCoreFanfare();
+
+      // Shrink & hide the Golden Core
+      goldenCore.removeAttribute("animation__pulse");
+      goldenCore.classList.remove("clickable");
+      goldenCore.setAttribute("animation__collect", {
+        property: "scale",
+        to: "0 0 0",
+        dur: 1000,
+        easing: "easeInBack"
+      });
+      document.querySelector("#core-ring").setAttribute("visible", "false");
+      document.querySelector("#core-label").setAttribute("visible", "false");
+      setTimeout(() => goldenCore.setAttribute("visible", "false"), 1100);
+
+      // Unlock & power up the Return Pad
+      returnBase.setAttribute("color", "#35D68A");
+      returnBase.setAttribute("material", "emissive:#00CC77;emissiveIntensity:2");
+      returnRingOuter.setAttribute("color", "#B9FFDA");
+      returnRingOuter.setAttribute("material", "emissive:#00FF99;emissiveIntensity:2");
+      returnRingInner.setAttribute("visible", "true");
+      returnLabel.setAttribute("value", "RETURN");
+      returnLabel.setAttribute("color", "#8DFFC7");
+
+      // Trigger Guardian Alarm State
+      guardianEyeL.setAttribute("color", "#FF2222");
+      guardianEyeL.setAttribute("material", "emissive:#FF0000;emissiveIntensity:4");
+      guardianEyeR.setAttribute("color", "#FF2222");
+      guardianEyeR.setAttribute("material", "emissive:#FF0000;emissiveIntensity:4");
+      guardianCore.setAttribute("color", "#FF2222");
+      guardianCore.setAttribute("material", "emissive:#FF0000;emissiveIntensity:4");
+      cityLight.setAttribute("color", "#FF4444");
+
+      showMessage("RETURN PORTAL UNLOCKED! ESCAPE FROM THE GUARDIAN!", true, "#FF6B6B");
+      setTimeout(startAlarmSound, 450);
+    });
+
+    // Clickable lore captions
+    jack.addEventListener("click", function () {
+      markHandledInteraction();
+      if (isGameOver) return;
+      playHoverChime();
+      const msg = missionComplete
+        ? "JACK: \"WE MADE IT BACK WITH THE GOLDEN CORE!\""
+        : "JACK: \"TAKE THE ASCEND PORTAL UP THE SPACE ELEVATOR!\"";
+      showMessage(msg, false, "#D9F5E8");
+    });
+
+    // Press V to toggle wide cinematic overview
+    window.addEventListener("keydown", function (e) {
+      if (e.key.toLowerCase() !== "v" || isTravelling) return;
+      if (!isOverview) {
+        const p = cameraRig.object3D.position;
+        savedPos = { x: p.x, y: p.y, z: p.z };
+        cameraRig.setAttribute("position", "0 14 28");
+        isOverview = true;
+        showMessage("OVERVIEW MODE (PRESS V TO RETURN)", false, "#9CEBFF");
+      } else {
+        cameraRig.setAttribute("position", `${savedPos.x} ${savedPos.y} ${savedPos.z}`);
+        isOverview = false;
+        showMessage(defaultMessage, false, "#FFFFFF");
+      }
+    });
+
+    function addButtonEffects(button) {
+      button.addEventListener("mouseenter", function () {
+        if (isGameOver || isTravelling) return;
+        if (button === returnPad && !hasCollectedCore) {
+          showMessage("LOCKED — COLLECT THE GOLDEN CORE TO UNLOCK", false, "#FF8888");
+          return;
+        }
+        playHoverChime();
+        button.setAttribute("scale", "1.12 1.12 1.12");
+        showMessage("CLICK TO ACTIVATE", false, "#80DFFF");
+      });
+      button.addEventListener("mouseleave", function () {
+        if (isGameOver) return;
+        button.setAttribute("scale", "1 1 1");
+        showMessage(defaultMessage, false, hasCollectedCore && !missionComplete ? "#FF6B6B" : "#FFFFFF");
+      });
+    }
+
+    addButtonEffects(ascendPad);
+    addButtonEffects(returnPad);
+    setChestLights("blue");
+    ammoHud.style.display = "none";
+    showMessage(defaultMessage, true);
+  });
+});
+</script>
+
+</body>
+</html>
